@@ -9,9 +9,8 @@
   
 */
 
-#include <SPI.h>
 #include <Wire.h>
-#include <Adafruit_GFX.h>
+//#include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
 
 #define i2c_Address 0x3c //initialize with the I2C addr 0x3C Typically eBay OLED's
@@ -53,40 +52,23 @@ void printScreen1(float voltage ) {
 
 void setup() {
   // put your setup code here, to run once:
-  // Show image buffer on the display hardware.
-  // Since the buffer is intialized with an Adafruit splashscreen
-  // internally, this will display the splashscreen.
 
   delay(250); // wait for the OLED to power up
   display.begin(i2c_Address, true); // Address 0x3C default
   //display.setContrast (0); // dim display
- 
+
+  // Show image buffer on the display hardware.
+  // Since the buffer is intialized with an Adafruit splashscreen
+  // internally, this will display the splashscreen.
+
   // display.display(); shows initial Adafruit splash screen
   // delay(2000);
 
   // Clear the buffer.
   // display.clearDisplay();
 
-  // draw a single pixel
-  // display.drawPixel(10, 10, SH110X_WHITE);
-  // Show the display buffer on the hardware.
-  // NOTE: You _must_ call display after making any drawing commands
-  // to make them visible on the display hardware!
-  // display.display();
-  // delay(2000);
-  // display.clearDisplay();
-
-  // text display tests
-  // display.setTextSize(1);
-  // display.setTextColor(SH110X_WHITE);
-  // display.setCursor(0, 0);
-  // display.println("Failure is always an option");
-  // display.setTextColor(SH110X_BLACK, SH110X_WHITE); // 'inverted' text
-  // display.println(3.141592);
-
-  
   // Intro screen
-  printIntro();
+  printIntro();  // clears the buffer at the begining
   delay(2000);
   
   // invert the display
