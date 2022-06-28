@@ -1,15 +1,15 @@
 /*
-  MoistureDisplaySimple
+  InaTest
 
-  Reads an analog input on pin 0 (Moisture sensor), converts it to voltage, 
-  and prints the result to the OLED Display.
-  Attach the Moisture sensor output to pin A0, and power it with +5V and ground.
-  
+  Displays Bus Voltage and Current of the INA219 sensor board together with the Bus Voltage
+  measured by the Analog Pin 0 and prints the result to the OLED Display.
+
+  Requires an INA219 breakout board.
   OLED I2C display must use SH110x controller.
-  
+
 */
 
-//#include <SPI.h>
+
 #include <Wire.h>
 //#include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
@@ -25,9 +25,13 @@ Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, 
 
 Adafruit_INA219 ina219;
 
+float VCC = 4.67;
+
 void setup() {
   // put your setup code here, to run once:
- 
+  Serial.begin(9600);
+  Serial.println("InaTest");
+
   delay(250); // wait for the OLED to power up
   display.begin(oled_i2c_Address, true); // Address 0x3C default
   // Wire.setClock(400000); // increase I2C clock speed to 400 kHz
@@ -50,13 +54,26 @@ void setup() {
   //display.invertDisplay(false);
   //delay(1000);
   
-   if (! ina219.begin()) {
-     printError("Failed to find", "INA219 chip");
+  // Configure the Analog reference
+  //analogReference(EXTERNAL);  // use AREF for reference voltage (must be at least 1.1V)
+  //analogReference(DEFAULT);   // reset to internal 5V reference
+
+  // Configure the INA219 sensor
+  if (! ina219.begin()) {
+     printError("Failed to find", "INA219 chip", "");
      while (1) { delay(10); }
   }
   // To use the highest 32V, 1A range (current unit: 0,1mA, power unit 2mW, overflow at 3.2A):
   ina219.setCalibration_32V_2A();
-  printError("INA219 Calibration:", "32V / 2 A");
+  char buf1[10];
+  dtostrf(VCC, 4, 2, buf1);
+  char buf[20];
+  strcpy(buf, "VREF = ");
+  strcat(buf, buf1);
+  strcat(buf, " V.");
+  //snprintf(buf, sizeof(buf), "VREF = %f", VCC);  // Analog input reference
+
+  printError("INA219 Calibration:", "32V / 2 A", buf);
 
   // To use a slightly lower 32V, 1A range (higher precision on amps 0.04mA, 0.8mW, overflow at 1.3A):
   //ina219.setCalibration_32V_1A();
@@ -85,7 +102,7 @@ void loop() {
   // read the input on analog pin 0:
   int sensorValue = analogRead(A0);
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
-  float voltage = sensorValue * (5.0 / 1023.0);
+  float voltage = sensorValue * (VCC / 1023.0);
   
   printScreen(shuntvoltage, busvoltage, current_mA, power_mW, loadvoltage, voltage);
   delay(500);
@@ -132,7 +149,7 @@ void printScreen(float shuntvoltage, float busvoltage, float current_mA, float p
   display.display();
 }
 
-void printError(const char *line1, const char *line2) {
+void printError(const char *line1, const char *line2, const char *line3) {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
@@ -143,5 +160,7 @@ void printError(const char *line1, const char *line2) {
   display.print(line1);
   display.setCursor(5, 30);
   display.print(line2);
+  display.setCursor(5, 40);
+  display.print(line3);
   display.display();
 }
