@@ -1,19 +1,38 @@
 /**  
  *   from: https://bitbucket.org/Blackneron/esp32_adc/src/master/ESP32_ADC/ESP32_ADC.ino
  *   
- *   Read adjusted analog value - compenstes the ADC's non-linearity   
+ *   Read adjusted analog value - compensates the ADC's non-linearity   
  */
 
 
 void setup() {
   Serial.begin(115200);
+  while(!Serial){delay(500);}  // wait for Arduino boards to connect serial to USB 
+  delay(500);  // give the serial interface on a ESP module a chance to come up properly after SW download
+
+  Serial.println("** ESP32_adc_adjusted **");
+    
+
+  // If your ESP32 runs on battery and you have to use Serial2 to log output
+  // Connect an Serial2USB converter and uncomment the following section.
+  
+  Serial.println("- Log output see on Serial port 2");
+  Serial = Serial2;
+  Serial.begin(115200);
+  while(!Serial){delay(500);}
+  delay(500); 
+  Serial.println("** ESP32_adc_adjusted **");
+  
 }
 
 void loop() {
 
-  // Specify constant.
-  const byte pinNumber = 36;
-
+  // Specify constant for analog input
+//  const byte pinNumber = 36;  // ADC input
+//  const byte pinNumber = 36;  // ADC input WEMOS Lite VP (ADC1-0)
+//  const byte pinNumber = 39;  // ADC input WEMOS Lite ADC1-3
+  const byte pinNumber = 4;  // ADC input WEMOS Lite ADC2-0
+  
   // Get the 'normal' value from the analog input. 
   int inputValue = analogRead(pinNumber);
 
