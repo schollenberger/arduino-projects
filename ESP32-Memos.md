@@ -2,38 +2,37 @@
 
   This document captures stuff around the ESP-32 Dev. Boards. These include:
     - ESP-32 Dev Kit C V2 / ESP-32 NodeMCU board
-	- ESP-32 Lolin32
-	
+    - ESP-32 Lolin32
 
   It summarizes Hardware aspects as how to power the Lolin board or how to
   log over the serial line if you are running on battery power and do not
-  have an USB port. 
-  It summarizes as well software aspects as how to properly use the AD 
+  have an USB port.
+  It summarizes as well software aspects as how to properly use the AD
   converters, DA converter, deep-sleep mode etc.
-  
+
   Some of the chapters are applicable to ESP-8266 boards. There is a separate
   memo file that covers 8266 board specifics.
-  
+
 ### Logging when running on battery
 
-    When runnin on battery you cannot use the USB port for logging over the
+    When running on battery you cannot use the USB port for logging over the
 	serial line. Instead you have to connect a TTL-USB serial adapter to the
 	internal serial port (GND, TX). As you are only capturing log data with
 	your PC, you don't have to connect the serial RX line.
-	
-	For the Moisture Logger project with the ESP-32 Lolin32 board, 
+
+	For the Moisture Logger project with the ESP-32 Lolin32 board,
 	I've been using the FT232-AZ adapter that a Mini USB port. This adapter
-    has the same serial chip on it as the ESP board. Therefore you don't 
-    have to install an additional COM driver on your PC.	
+    has the same serial chip on it as the ESP board. Therefore you don't
+    have to install an additional COM driver on your PC.
 	When using this port you have to select the logic pin levels via a jumper.
 	Set it to 3.3 V. Note, that the adapter receives its power from the USB
 	port and therefore doesn't need any power from the ESP board. Connect
 	GND and TX (GPIO 17) only.
-	
+
 	With this HW setup you have to log to the Serial2 interface. In order
-	to switch easily between the two serial lines, you might find the 
+	to switch easily between the two serial lines, you might find the
 	following code snipplet at the beginning of the setup() function useful:
-	
+
 	```
 	void setup(){
       // Serial port for debugging purposes
@@ -44,26 +43,26 @@
 
     // If your ESP32 runs on battery and you have to use Serial2 to log output
     // Connect an Serial2USB converter and uncomment the following section.
-  
+
     Serial.println("- Log output see on Serial port 2");
     Serial = Serial2;
     Serial.begin(115200);
     while(!Serial){delay(500);}
-    delay(500); 
+    delay(500);
     Serial.println("** Moisture_logger on Serial2 **");
 
-	...
+	  ...
+  }
 	```
 	It overloads the Serial object with the Serial2 object. Thus you don't have
 	to change anything in the remaining code.
-	
+
 ### ADC read
 
   ESP32 Analog pins have 12-bit resolution. This means that when you read an
   analog input, its range may vary from 0 to 4095.
 
-  Maximum Voltage that can be read is:  3,24 V
-  
+  Maximum Voltage that can be read is:  3.24 V
 
   Note that on an ESP32 you cannot use ADC2 in conjuction with WiFi!!
   If you plan to communicate via Wifi stick to the ADC1 channels.
@@ -73,24 +72,31 @@
   From: https://randomnerdtutorials.com/esp32-adc-analog-read-arduino-ide/
 
   From https://github.com/espressif/arduino-esp32/issues/92
+    Inconsistent values when using "analogRead()"
 
-  Inconsistent values when using "analogRead()"
     Hi,
+    I checked yesterday the new implementation of analogRead and values are
+    pretty incosistent. Not sure if it is because of the implementation of the
+    method or just because the ADC on ESP32 is not very accurate.
 
-    I checked yesterday the new implementation of analogRead and values are pretty incosistent. Not sure if it is because of the implementation of the method or just because the ADC on ESP32 is not very accurate.
-
-    I created a simple several stage voltage divider to read on. Source was the 3.3V output pin of the ESP WROOM 32. Then I applied 3 different steps with 4.7K 1% tolerance resistors. Values measured with the multimeter:
+    I created a simple several stage voltage divider to read on. Source was
+    the 3.3V output pin of the ESP WROOM 32. Then I applied 3 different steps
+    with 4.7K 1% tolerance resistors. Values measured with the multimeter:
 
     P1: 3.286V --> Expected = 4095 / ADC output = 4095
     P2: 2.462V --> Expected = 3071 / ADC output = 2811
     P3: 1.641V --> Expected = 2047 / ADC output = 1814
     P4: 0.819V --> Expected = 1021 / ADC output = 823
 
-    Any explanation to this? I though the levels would go from 0 being 0V and 4095 being top of the range 3.3V
+    Any explanation to this? I though the levels would go from 0 being 0V and
+    4095 being top of the range 3.3V
 
-    I need to rely on an accurante ADC for my project so any help is welcomed. Cheers!
+    I need to rely on an accurate ADC for my project so any help is welcomed. Cheers!
 
-
+  There is some code under
+      https://bitbucket.org/Blackneron/esp32_adc/src/master/ESP32_ADC/ESP32_ADC.ino
+  that compensates for the non-linearity of the ESP32 ADC.
+  You find it locally in the project `ESP-32/ESP32_adc_adjusted`.
 
 ### Analog write
 
@@ -119,3 +125,54 @@
       //DAC (pins 25 or 26)
       sdWrite(25, 128);//pin, 8bit value
       sdWrite(26, 65);//pin, 8bit value
+
+### Use Lolin Board with Lipo Battery
+
+  The ESP-32 Lolin32 board is very power efficient in deep sleep mode. This
+  allows you to create IOT monitoring applications that run for weeks being
+  powered by a LiPo battery without recharging it.
+  It is good practice to monitor the LiPo voltage, e.g in order to send out
+  an alarm when the battery runs out of capacity.
+  The problem in doing this is the LiPo battery voltage being higher than
+  the maximum AD converter input voltage of 3.3V.
+
+  In the Moisture Logger we used a voltage divider to reduce the ADC input
+  voltage in a linear manner.
+
+  ```
+                                           +-----------------------------+
+                                           |       WEMOS LoLin Board     |
+             +-------------+---------------o Ubatt                       |
+             |             |               |                             |
+             |            +++              |                             |
+             |            | | 220 kOhms    |                             |
+             |            | |              |                             |
+    Ubatt    |            +++              |                             |
+             | +           |               | ADC Input (GPIO 33)         |
+   LiPo   -------          +---------------o----------+                  |
+   Battery  ===            |               |          |                  |
+             |            +++              |         +++                 |
+             |            | | 330 kOhms    |         | | 15 MOhms        |
+             |            | |              |         | | ACC resistance  |
+             |            +++              |         +++                 |
+             |             |               | GND      |                  |
+             +-------------+---------------0----------+´                 |
+                                           |                             |
+                                           +-----------------------------+
+  ```
+
+  The voltage divider has been soldered directly to the board's LiPo socket.
+
+  ADC input voltage for different battery voltages:
+
+    Ubatt    Uadc          Uadc       Uadc       raw ADC
+             Oscillosope   raw read   corrected  value
+
+    3.86     2.30          2.16       2.34       2675
+
+    3.56     2.14          2.01       2.19       2493
+      -3.6
+
+    3.80     2.30
+
+    3.91     2.34

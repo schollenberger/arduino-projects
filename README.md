@@ -1,5 +1,24 @@
-# arduino-projects
-  Simple Arduino projects
+# Arduino Projects
+
+  This Git Repo contains projects for the Arduino or compatible boards.  
+  The code has been created with the Arduino IDE.  
+
+  Use either the Ardiuino IDE (Windows 10 app) or the CLI `arduino-cli` to run
+  the .ino files in this repository.
+
+  The projects on top level have been written for the Arduino Nano device.
+  Code that runs on different platforms that the Arduino IDE supports as well
+  but won't run on the Arduino without modification, e.g. ESP-32 or ESP-8266
+  code has been put in special directories one for each processor type
+  (ESP-32 and ESP-8266).
+
+  Most of the code is portable but there are slight differences.
+
+  So you may find similar code projects in these directories as they
+  differ in the details and won't run cross-platform.
+
+
+## Arduino Language Documentation  
 
   Documentation of the Arduino the CC language:
     https://www.arduino.cc/reference/en/
@@ -7,16 +26,6 @@
   Link Arduino Libraries and their documentation:
     https://www.arduino.cc/reference/en/libraries/
 
-  Use either the Ardiuino IDE (Windows 10 app) or the CLI `arduino-cli` to run
-  the .ino files in this repository.
-
-  The project directories have been written for an Arduino Nano device.
-  There are subdirectories for code written for Arduino compatible devices
-  like the ESP32 and the ESP-8266 controllers.
-  Most of the code is portable but there are slight differences.
-  Code written for a specific device may or may not run on another one.
-  Therefore you may find similar projects in these directories doing the
-  same think on different devices.
 
 ## Links to Arduino Adafruit libraries
 
@@ -82,7 +91,13 @@
 
 ## Some coding memos for implicit features (device independent)
 
+  This section focusses on the Arduino (Nano).
+
+  You find additional memos being specific to the ESP-32 processor family
+  in the file `ESP32-Memos.md`
+
 ### Print to serial interface
+
   It is good practice to write debug information to the serial interface.
   You can use the IDE's serial monitor to see the content.
 
