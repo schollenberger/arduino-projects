@@ -10,8 +10,8 @@
   It summarizes as well software aspects as how to properly use the AD
   converters, DA converter, deep-sleep mode etc.
 
-  Some of the chapters are applicable to ESP-8266 boards. There is a separate
-  memo file that covers 8266 board specifics.
+  Some of the chapters are applicable to ESP-8266 boards as well.
+  There is a separate memo file that covers 8266 board specifics.
 
 ### Logging when running on battery
 
